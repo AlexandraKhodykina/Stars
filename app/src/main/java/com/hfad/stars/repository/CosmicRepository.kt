@@ -12,12 +12,13 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
 
 class CosmicRepository(context: Context) {
 
-    private val dao: CosmicObjectDao = AppDatabase.getDatabase(context).cosmicObjectDao()
-    private val appExecutors = App.getInstance().appExecutors
+    private val dao = AppDatabase.getDatabase(context).cosmicObjectDao()
 
     private val nasaService: NASAApiService by lazy {
         Retrofit.Builder()
@@ -36,6 +37,7 @@ class CosmicRepository(context: Context) {
                     loadFromApi()
                 } catch (e: Exception) {
                     // В случае ошибки возвращаем локальные данные
+                    e.printStackTrace()
                 }
             }
             dao.getAllObjects()
@@ -75,17 +77,17 @@ class CosmicRepository(context: Context) {
                 if (apodResponse.isSuccessful) {
                     apodResponse.body()?.let { objects ->
                         // Сохраняем в БД
-                        appExecutors.diskIO().execute {
-                            dao.insertAll(objects)
-                        }
+                        dao.insertAll(objects)
                     }
                 }
+
 
                 // Можно добавить загрузку астероидов
                 // val asteroids = nasaService.getAsteroids(getTodayDate())
 
             } catch (e: Exception) {
                 // Просто игнорируем ошибки сети, работаем с локальными данными
+                e.printStackTrace()
             }
         }
     }
@@ -96,14 +98,54 @@ class CosmicRepository(context: Context) {
     }
 
     // Проверка сети
-    fun isNetworkAvailable(context: Context): Boolean {
-        return try {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
-                    as android.net.ConnectivityManager
+    fun isNetworkAvailable(context: Context): Boolean{
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+                as ConnectivityManager
+
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            capabilities != null && (
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    )
+        } else {
             val networkInfo = connectivityManager.activeNetworkInfo
             networkInfo != null && networkInfo.isConnected
-        } catch (e: Exception) {
-            false
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
