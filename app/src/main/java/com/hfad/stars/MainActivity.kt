@@ -5,16 +5,91 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import android.content.Intent
+import androidx.activity.viewModels
+import androidx.recyclerview.widget.GridLayoutManager
+import com.hfad.stars.adapter.CosmicObjectAdapter
+import com.hfad.stars.databinding.ActivityMainBinding
+import com.hfad.stars.viewmodel.MainViewModel
+import android.view.View
+import androidx.activity.viewModels
+
+
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
+    private lateinit var adapter: CosmicObjectAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        setupUI()
+        setupObservers()
+
+        // Загружаем данные
+        viewModel.loadData()
+    }
+
+    private fun setupUI() {
+        // Настройка Toolbar
+        binding.toolbar.title = getString(R.string.title_main)
+
+        // Кнопка профиля
+        binding.profileButton.setOnClickListener {
+            startActivity(Intent(this, FavoritesActivity::class.java))
+        }
+
+        // Настройка списка
+        adapter = CosmicObjectAdapter { cosmicObject ->
+            val intent = Intent(this, DetailsActivity::class.java).apply {
+                putExtra("object_id", cosmicObject.id)
+            }
+            startActivity(intent)
+        }
+
+        binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+        binding.recyclerView.adapter = adapter
+
+        // Кнопка повтора
+        binding.retryButton.setOnClickListener {
+            viewModel.refresh()
+        }
+    }
+
+    private fun setupObservers() {
+        viewModel.cosmicObjects.observe(this) { objects ->
+            adapter.submitList(objects)
+
+            if (objects.isEmpty()) {
+                binding.emptyTextView.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+            } else {
+                binding.emptyTextView.visibility = View.GONE
+                binding.recyclerView.visibility = View.VISIBLE
+            }
+        }
+
+        viewModel.isLoading.observe(this) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        viewModel.error.observe(this) { error ->
+            if (error.isNotEmpty()) {
+                binding.errorTextView.text = error
+                binding.errorTextView.visibility = View.VISIBLE
+                binding.retryButton.visibility = View.VISIBLE
+            } else {
+                binding.errorTextView.visibility = View.GONE
+                binding.retryButton.visibility = View.GONE
+            }
+        }
+
+        viewModel.networkAvailable.observe(this) { isAvailable ->
+            binding.networkWarning.visibility = if (!isAvailable) View.VISIBLE else View.GONE
         }
     }
 }
