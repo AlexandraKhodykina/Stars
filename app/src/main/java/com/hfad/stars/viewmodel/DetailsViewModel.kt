@@ -15,23 +15,17 @@ class DetailsViewModel(application: Application) : AndroidViewModel(application)
     private val _cosmicObject = MutableLiveData<CosmicObject?>()
     val cosmicObject: LiveData<CosmicObject?> = _cosmicObject
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
     fun loadObject(objectId: String) {
         viewModelScope.launch {
-            _isLoading.value = true
             try {
-                val obj = repository.getObjectById(objectId)  // ← исправлено
-                _cosmicObject.value = obj
+                val cosmicObject = repository.getObjectById(objectId)
+                _cosmicObject.value = cosmicObject
                 _error.value = ""
             } catch (e: Exception) {
                 _error.value = "Не удалось загрузить объект"
-            } finally {
-                _isLoading.value = false
             }
         }
     }
