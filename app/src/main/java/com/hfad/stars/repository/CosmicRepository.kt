@@ -15,7 +15,6 @@ import java.util.*
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 
-
 class CosmicRepository(context: Context) {
 
     private val dao = AppDatabase.getDatabase(context).cosmicObjectDao()
@@ -34,9 +33,14 @@ class CosmicRepository(context: Context) {
             // Проверяем, нужно ли обновить из сети
             if (forceRefresh) {
                 try {
-                    loadFromApi()
+                    // Загружаем только APOD для простоты
+                    val response = nasaService.getAPOD(count = 20)
+                    if (response.isSuccessful) {
+                        response.body()?.let { objects ->
+                            dao.insertAll(objects)
+                        }
+                    }
                 } catch (e: Exception) {
-                    // В случае ошибки возвращаем локальные данные
                     e.printStackTrace()
                 }
             }
@@ -67,75 +71,8 @@ class CosmicRepository(context: Context) {
             dao.updateFavorite(objectId, !isCurrentlyFavorite)
         }
     }
-
-    // Загрузить из API
-    private suspend fun loadFromApi() {
-        withContext(Dispatchers.IO) {
-            try {
-                val allObjects = mutableListOf<CosmicObject>()
-
-                // 1. Загружаем APOD (картинки дня)
-                val apodResponse = nasaService.getAPOD(count = 20)
-                if (apodResponse.isSuccessful) {
-                    apodResponse.body()?.let { apodObjects ->
-                        allObjects.addAll(apodObjects)
-                    }
-                }
-
-                // 2. Загружаем астероиды
-                val today = getTodayDate()
-                val asteroidResponse = nasaService.getAsteroids(startDate = today)
-                if (asteroidResponse.isSuccessful) {
-                    asteroidResponse.body()?.let { asteroidResponse ->
-                        val asteroids = convertAsteroidsToCosmicObjects(asteroidResponse)
-                        allObjects.addAll(asteroids)
-                    }
-                }
-
-                // Сохраняем всё в БД
-                if (allObjects.isNotEmpty()) {
-                    dao.insertAll(allObjects)
-                }
-
-            } catch (e: Exception) {
-                // Просто игнорируем ошибки сети, работаем с локальными данными
-                e.printStackTrace()
-            }
-        }
-    }
-    // Конвертируем астероиды в CosmicObject
-    private fun convertAsteroidsToCosmicObjects(response: AsteroidResponse): List<CosmicObject> {
-        val cosmicObjects = mutableListOf<CosmicObject>()
-
-        response.near_earth_objects.forEach { (date, asteroids) ->
-            asteroids.forEach { asteroid ->
-                val cosmicObject = CosmicObject(
-                    id = asteroid.id,
-                    name = asteroid.name,
-                    description = "Астероид, приближающийся к Земле",
-                    imageUrl = null, // У астероидов обычно нет изображений
-                    type = "asteroid",
-                    date = date,
-                    isFavorite = false,
-                    distance = asteroid.close_approach_data.firstOrNull()
-                        ?.miss_distance?.get("kilometers") ?: "Неизвестно",
-                    size = asteroid.estimated_diameter["kilometers"]?.get("estimated_diameter_max")
-                        ?.toString() ?: "Неизвестно"
-                )
-                cosmicObjects.add(cosmicObject)
-            }
-        }
-
-        return cosmicObjects
-    }
-
-    private fun getTodayDate(): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return dateFormat.format(Date())
-    }
-
     // Проверка сети
-    fun isNetworkAvailable(context: Context): Boolean{
+    fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
                 as ConnectivityManager
 
@@ -144,8 +81,7 @@ class CosmicRepository(context: Context) {
             val capabilities = connectivityManager.getNetworkCapabilities(network)
             capabilities != null && (
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                     )
         } else {
             val networkInfo = connectivityManager.activeNetworkInfo
