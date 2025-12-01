@@ -30,7 +30,7 @@ interface CosmicObjectDao {
     suspend fun updateFavorite(id: String, isFavorite: Boolean)
 
     @Delete
-    suspend fun delete(object: CosmicObject)
+    suspend fun delete(cosmicObject: CosmicObject)
 }
 
 
