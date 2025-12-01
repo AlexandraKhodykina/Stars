@@ -72,24 +72,61 @@ class CosmicRepository(context: Context) {
     private suspend fun loadFromApi() {
         withContext(Dispatchers.IO) {
             try {
-                // Загружаем APOD (картинки дня)
+                val allObjects = mutableListOf<CosmicObject>()
+
+                // 1. Загружаем APOD (картинки дня)
                 val apodResponse = nasaService.getAPOD(count = 20)
                 if (apodResponse.isSuccessful) {
-                    apodResponse.body()?.let { objects ->
-                        // Сохраняем в БД
-                        dao.insertAll(objects)
+                    apodResponse.body()?.let { apodObjects ->
+                        allObjects.addAll(apodObjects)
                     }
                 }
 
+                // 2. Загружаем астероиды
+                val today = getTodayDate()
+                val asteroidResponse = nasaService.getAsteroids(startDate = today)
+                if (asteroidResponse.isSuccessful) {
+                    asteroidResponse.body()?.let { asteroidResponse ->
+                        val asteroids = convertAsteroidsToCosmicObjects(asteroidResponse)
+                        allObjects.addAll(asteroids)
+                    }
+                }
 
-                // Можно добавить загрузку астероидов
-                // val asteroids = nasaService.getAsteroids(getTodayDate())
+                // Сохраняем всё в БД
+                if (allObjects.isNotEmpty()) {
+                    dao.insertAll(allObjects)
+                }
 
             } catch (e: Exception) {
                 // Просто игнорируем ошибки сети, работаем с локальными данными
                 e.printStackTrace()
             }
         }
+    }
+    // Конвертируем астероиды в CosmicObject
+    private fun convertAsteroidsToCosmicObjects(response: AsteroidResponse): List<CosmicObject> {
+        val cosmicObjects = mutableListOf<CosmicObject>()
+
+        response.near_earth_objects.forEach { (date, asteroids) ->
+            asteroids.forEach { asteroid ->
+                val cosmicObject = CosmicObject(
+                    id = asteroid.id,
+                    name = asteroid.name,
+                    description = "Астероид, приближающийся к Земле",
+                    imageUrl = null, // У астероидов обычно нет изображений
+                    type = "asteroid",
+                    date = date,
+                    isFavorite = false,
+                    distance = asteroid.close_approach_data.firstOrNull()
+                        ?.miss_distance?.get("kilometers") ?: "Неизвестно",
+                    size = asteroid.estimated_diameter["kilometers"]?.get("estimated_diameter_max")
+                        ?.toString() ?: "Неизвестно"
+                )
+                cosmicObjects.add(cosmicObject)
+            }
+        }
+
+        return cosmicObjects
     }
 
     private fun getTodayDate(): String {
