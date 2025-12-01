@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.hfad.stars.adapter.CosmicObjectAdapter
 import com.hfad.stars.databinding.ActivityFavoritesBinding
 import com.hfad.stars.viewmodel.FavoritesViewModel
+import android.widget.Toast
+import androidx.activity.viewModels
 
 
 class FavoritesActivity : AppCompatActivity() {
@@ -36,12 +38,19 @@ class FavoritesActivity : AppCompatActivity() {
         }
 
         // Настройка списка
-        adapter = CosmicObjectAdapter { cosmicObject ->
-            val intent = Intent(this, DetailsActivity::class.java).apply {
-                putExtra("object_id", cosmicObject.id)
+        adapter = CosmicObjectAdapter(
+            onItemClick = { cosmicObject ->
+                val intent = Intent(this, DetailsActivity::class.java).apply {
+                    putExtra("object_id", cosmicObject.id)
+                }
+                startActivity(intent)
+            },
+            onItemLongClick = { cosmicObject ->
+                // Показываем диалог удаления
+                showDeleteDialog(cosmicObject)
+                true
             }
-            startActivity(intent)
-        }
+        )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
@@ -59,5 +68,23 @@ class FavoritesActivity : AppCompatActivity() {
                 binding.recyclerView.visibility = View.VISIBLE
             }
         }
+        viewModel.deleteSuccess.observe(this) { success ->
+            if (success) {
+                Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
+
+    private fun showDeleteDialog(cosmicObject: CosmicObject) {
+        // Простой диалог удаления
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Удалить из избранного?")
+            .setMessage("Вы уверены, что хотите удалить '${cosmicObject.name}' из избранного?")
+            .setPositiveButton("Удалить") { dialog, which ->
+                viewModel.deleteFavorite(cosmicObject)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
 }
