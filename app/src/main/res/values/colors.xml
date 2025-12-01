@@ -1,5 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Основные фиолетовые цвета -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+
+    <!-- Черный и белый -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Серые оттенки -->
+    <color name="gray_50">#FFF5F5F5</color>
+    <color name="gray_100">#FFE0E0E0</color>
+    <color name="gray_200">#FFC7C7C7</color>
+    <color name="gray_500">#FF9E9E9E</color>
+    <color name="gray_700">#FF616161</color>
+    <color name="gray_900">#FF212121</color>
+
+    <!-- Фоны -->
+    <color name="background">#FFFFFFFF</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="card_background">#FFFFFFFF</color>
+
+    <!-- Текст -->
+    <color name="text_primary">#FF000000</color>
+    <color name="text_secondary">#FF616161</color>
+    <color name="text_on_primary">#FFFFFFFF</color>
+
+    <!-- Статусы -->
+    <color name="error">#FFB00020</color>
+    <color name="success">#FF00C853</color>
+    <color name="warning">#FFFF9800</color>
+
+    <!-- Акценты -->
+    <color name="primary">@color/purple_500</color>
+    <color name="primary_dark">@color/purple_700</color>
+    <color name="primary_light">@color/purple_200</color>
+
+    <!-- Дополнительные -->
+    <color name="divider">#1F000000</color>
+    <color name="shadow">#33000000</color>
+    <color name="overlay">#66000000</color>
+
+    <!-- Для предупреждений -->
+    <color name="warning_background">#FFFFF8E1</color>
+    <color name="warning_text">#FF8A6D3B</color>
 </resources>
