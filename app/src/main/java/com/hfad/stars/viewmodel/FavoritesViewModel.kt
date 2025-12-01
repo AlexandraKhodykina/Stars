@@ -31,9 +31,11 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
     fun deleteFavorite(cosmicObject: CosmicObject) {
         viewModelScope.launch {
             try {
-                // Можно просто снять отметку "избранное"
-                repository.toggleFavorite(cosmicObject.id, true)
+                // Используем новый метод
+                repository.removeFromFavorites(cosmicObject.id)
                 _deleteSuccess.value = true
+
+                // Показать Toast лучше в Activity, а не здесь
             } catch (e: Exception) {
                 _deleteSuccess.value = false
             }

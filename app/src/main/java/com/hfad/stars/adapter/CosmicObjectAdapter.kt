@@ -10,7 +10,7 @@ import com.hfad.stars.model.CosmicObject
 import com.squareup.picasso.Picasso
 
 class CosmicObjectAdapter(
-    private val onItemClick: (CosmicObject) -> Unit,
+    private val onltemClick: (CosmicObject) -> Unit,
     private val onItemLongClick: ((CosmicObject) -> Unit)? = null  // Убрал ? после Unit
 ) : RecyclerView.Adapter<CosmicObjectAdapter.ViewHolder>() {
 
@@ -32,7 +32,7 @@ class CosmicObjectAdapter(
         holder.bind(item)
 
         holder.itemView.setOnClickListener {
-            onItemClick(item)
+            onltemClick(item)
         }
         // Обработка долгого нажатия (только для избранного)
         holder.itemView.setOnLongClickListener {

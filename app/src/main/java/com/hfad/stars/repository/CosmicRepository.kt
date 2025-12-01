@@ -71,6 +71,11 @@ class CosmicRepository(context: Context) {
             dao.updateFavorite(objectId, !isCurrentlyFavorite)
         }
     }
+    suspend fun removeFromFavorites(objectId: String) {
+        withContext(Dispatchers.IO) {
+            dao.updateFavorite(objectId, false) // Просто устанавливаем isFavorite = false
+        }
+    }
     // Проверка сети
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)

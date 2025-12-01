@@ -37,20 +37,28 @@ class FavoritesActivity : AppCompatActivity() {
             finish()
         }
 
-        // Настройка списка
+
+        // Создаем адаптер с лямбдой
         adapter = CosmicObjectAdapter(
-            onItemClick = { cosmicObject ->
+            onltemClick = { cosmicObject ->
+                // Обычный клик - открываем детали
                 val intent = Intent(this, DetailsActivity::class.java).apply {
                     putExtra("object_id", cosmicObject.id)
                 }
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                // Показываем диалог удаления
-                showDeleteDialog(cosmicObject)
+                // Долгий клик - удаляем из избранного
+                viewModel.deleteFavorite(cosmicObject)
+                Toast.makeText(
+                    this,
+                    "${cosmicObject.name} удален из избранного",
+                    Toast.LENGTH_SHORT
+                ).show()
                 true
             }
         )
+
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
@@ -68,23 +76,28 @@ class FavoritesActivity : AppCompatActivity() {
                 binding.recyclerView.visibility = View.VISIBLE
             }
         }
-        viewModel.deleteSuccess.observe(this) { success ->
-            if (success) {
-                Toast.makeText(this, "Удалено из избранного", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun showDeleteDialog(cosmicObject: CosmicObject) {
-        // Простой диалог удаления
-        android.app.AlertDialog.Builder(this)
-            .setTitle("Удалить из избранного?")
-            .setMessage("Вы уверены, что хотите удалить '${cosmicObject.name}' из избранного?")
-            .setPositiveButton("Удалить") { dialog, which ->
-                viewModel.deleteFavorite(cosmicObject)
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
