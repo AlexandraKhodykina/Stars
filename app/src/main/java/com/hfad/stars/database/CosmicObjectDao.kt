@@ -14,16 +14,12 @@ interface CosmicObjectDao {
     fun getFavorites(): LiveData<List<CosmicObject>>
 
     // Поиск
-    @Query("SELECT * FROM cosmic_objects WHERE title LIKE '%' || :query || '%' OR explanation LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM cosmic_objects WHERE name LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%'")
     fun searchObjects(query: String): LiveData<List<CosmicObject>>
 
     // Получить по ID
     @Query("SELECT * FROM cosmic_objects WHERE id = :id")
     suspend fun getObjectById(id: String): CosmicObject?
-
-    // Добавить или обновить
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(object: CosmicObject)
 
     // Добавить несколько
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -33,7 +29,22 @@ interface CosmicObjectDao {
     @Query("UPDATE cosmic_objects SET isFavorite = :isFavorite WHERE id = :id")
     suspend fun updateFavorite(id: String, isFavorite: Boolean)
 
-    // Удалить
     @Delete
     suspend fun delete(object: CosmicObject)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
