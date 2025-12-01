@@ -63,4 +63,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refresh() {
         loadData()
     }
+    // ДОБАВЛЕННЫЙ МЕТОД: Переключение избранного
+    fun toggleFavorite(cosmicObject: CosmicObject) {
+        viewModelScope.launch {
+            try {
+                // Используем текущий статус isFavorite для переключения
+                repository.toggleFavorite(cosmicObject.id, cosmicObject.isFavorite)
+            } catch (e: Exception) {
+                // Можно добавить обработку ошибок, если нужно
+                e.printStackTrace()
+            }
+        }
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

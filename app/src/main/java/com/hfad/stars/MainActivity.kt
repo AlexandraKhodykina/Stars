@@ -13,7 +13,7 @@ import com.hfad.stars.databinding.ActivityMainBinding
 import com.hfad.stars.viewmodel.MainViewModel
 import android.view.View
 import androidx.activity.viewModels
-
+import android.widget.Toast
 
 
 class MainActivity : AppCompatActivity() {
@@ -44,12 +44,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Настройка списка
-        adapter = CosmicObjectAdapter { cosmicObject ->
-            val intent = Intent(this, DetailsActivity::class.java).apply {
-                putExtra("object_id", cosmicObject.id)
+        adapter = CosmicObjectAdapter(
+            onltemClick = { cosmicObject ->
+                val intent = Intent(this, DetailsActivity::class.java).apply {
+                    putExtra("object_id", cosmicObject.id)
+                }
+                startActivity(intent)
+            },
+            onItemLongClick = { cosmicObject ->
+                // Долгое нажатие в главном экране - добавляем/удаляем из избранного
+                viewModel.toggleFavorite(cosmicObject)
+
+                // Показываем уведомление
+                val message = if (cosmicObject.isFavorite) {
+                    "${cosmicObject.name} добавлен в избранное"
+                } else {
+                    "${cosmicObject.name} удален из избранного"
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+
+                true
             }
-            startActivity(intent)
-        }
+        )
 
         binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
         binding.recyclerView.adapter = adapter
