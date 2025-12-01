@@ -1,31 +1,21 @@
 <resources>
-    <string name="app_name">Stars - Космический поиск</string>
-    <string name="home">Главная</string>
-    <string name="search">Поиск</string>
-    <string name="save">Сохранить</string>
-    <string name="delete">Удалить</string>
-    <string name="profile">Личный кабинет</string>
-    <string name="add_to_favorites">Добавить в избранное</string>
-    <string name="remove_from_favorites">Удалить из избранного</string>
-    <string name="no_internet">Нет подключения к интернету</string>
-    <string name="try_again">Попробовать снова</string>
+    <string name="app_name">Stars</string>
+    <string name="title_main">Космические объекты</string>
+    <string name="title_details">Детали</string>
+    <string name="title_favorites">Избранное</string>
+
+    <string name="search_hint">Поиск...</string>
+    <string name="no_data">Нет данных</string>
+    <string name="no_favorites">Нет избранного</string>
+    <string name="no_internet">Нет интернета</string>
+    <string name="try_again">Повторить</string>
     <string name="loading">Загрузка...</string>
     <string name="error">Ошибка</string>
-    <string name="no_data">Нет данных</string>
-    <string name="saved_successfully">Сохранено успешно</string>
 
-    <!-- Screen 1 -->
-    <string name="title_main">Космические объекты</string>
-    <string name="search_hint">Искать звезды, галактики...</string>
+    <string name="add_to_favorites">Добавить</string>
+    <string name="remove_from_favorites">Удалить</string>
+    <string name="delete">Удалить</string>
 
-    <!-- Screen 2 -->
-    <string name="title_details">Детали объекта</string>
-    <string name="type">Тип</string>
     <string name="description">Описание</string>
-    <string name="distance">Расстояние</string>
-    <string name="size">Размер</string>
-
-    <!-- Screen 3 -->
-    <string name="title_favorites">Избранное</string>
-    <string name="no_favorites">Нет избранных объектов</string>
+    <string name="type">Тип</string>
 </resources>
