@@ -23,37 +23,40 @@ class FavoritesActivity : AppCompatActivity() {
         binding = ActivityFavoritesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupUI()
+        setupToolbar()
+        setupRecyclerView()
         setupObservers()
     }
 
-    private fun setupUI() {
-        // Настройка Toolbar
-        binding.toolbar.title = getString(R.string.title_favorites)
-
-        // Кнопка домой
+    private fun setupToolbar() {
+        // Делаем иконку "Домой" в тулбаре кликабельной
         binding.homeButton.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            startActivity(intent)
             finish()
         }
-
-
-        // Создаем адаптер с лямбдой
+    }
+    private fun setupRecyclerView() {
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
-                // Обычный клик - открываем детали
+                // Открываем детальную страницу
                 val intent = Intent(this, DetailsActivity::class.java).apply {
                     putExtra("object_id", cosmicObject.id)
                 }
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
+                // Удаляем из избранного долгим нажатием
                 viewModel.removeFromFavorites(cosmicObject)
-                Toast.makeText(this, "${cosmicObject.name} удалён из избранного", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "${cosmicObject.name} удалён из избранного",
+                    Toast.LENGTH_SHORT
+                ).show()
                 true
             }
         )
-
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter

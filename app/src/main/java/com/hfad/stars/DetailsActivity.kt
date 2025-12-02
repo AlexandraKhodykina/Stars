@@ -19,11 +19,11 @@ class DetailsActivity : AppCompatActivity() {
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupUI()
+        setupToolbarButtons()
         loadObject()
     }
-    private fun setupUI() {
-        // Кнопка домой
+    private fun setupToolbarButtons() {
+        // Кнопка "Домой"
         binding.homeButton.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -42,36 +42,32 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     private fun loadObject() {
-        val objectId = intent.getStringExtra("object_id")
-        if (objectId != null) {
-            viewModel.loadObject(objectId)
+        val objectId = intent.getStringExtra("object_id") ?: return
 
-            viewModel.cosmicObject.observe(this) { cosmicObject ->
-                if (cosmicObject != null) {
-                    // Заполняем данные
-                    binding.titleTextView.text = cosmicObject.name
-                    binding.typeTextView.text = "Тип: ${cosmicObject.type ?: "Неизвестно"}"
-                    binding.descriptionTextView.text = cosmicObject.description ?: "Нет описания"
+        viewModel.loadObject(objectId)
 
-                    // Загружаем изображение
-                    cosmicObject.imageUrl?.let { url ->
-                        Picasso.get().load(url).into(binding.objectImageView)
-                    }
+        viewModel.cosmicObject.observe(this) { cosmicObject ->
+            cosmicObject ?: return@observe
 
-                    // Обновляем текст кнопки
-                    binding.saveButton.text = if (cosmicObject.isFavorite) {
-                        getString(R.string.remove_from_favorites)
-                    } else {
-                        getString(R.string.add_to_favorites)
-                    }
-                }
+            binding.titleTextView.text = cosmicObject.name
+            binding.typeTextView.text = "Тип: ${cosmicObject.type ?: "Неизвестно"}"
+            binding.descriptionTextView.text = cosmicObject.description ?: "Нет описания"
+
+            cosmicObject.imageUrl?.let { url ->
+                Picasso.get()
+                    .load(url)
+                    .placeholder(R.drawable.ic_cosmo)
+                    .error(R.drawable.ic_cosmo)
+                    .into(binding.objectImageView)
             }
 
-            viewModel.error.observe(this) { error ->
-                if (error.isNotEmpty()) {
-                    Toast.makeText(this, error, Toast.LENGTH_SHORT).show()
-                }
+            // Обновляем текст кнопки
+            binding.saveButton.text = if (cosmicObject.isFavorite) {
+                "Убрать из избранного"
+            } else {
+                "Добавить в избранное"
             }
         }
     }
+
 }
