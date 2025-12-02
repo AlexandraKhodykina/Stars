@@ -11,10 +11,10 @@
     <LinearLayout
         android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="118dp"
         android:background="@color/purple"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
 
@@ -24,22 +24,22 @@
             android:id="@+id/homeButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_home"
-            app:tint="@color/white"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:src="@drawable/ic_home"
+            app:tint="@color/white" />
 
         <!-- Заголовок по центру -->
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:gravity="center"
             android:text="@string/title_favorites"
             android:textColor="@color/white"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:gravity="center" />
+            android:textStyle="bold" />
 
         <!-- Пустое место справа (для симметрии) -->
         <View
