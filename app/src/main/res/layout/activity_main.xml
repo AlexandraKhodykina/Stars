@@ -9,45 +9,49 @@
     android:orientation="vertical"
     android:background="@color/white">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Фиолетовая шапка вместо Toolbar -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="56dp"
         android:background="@color/purple"
-        android:minHeight="?attr/actionBarSize"
-        app:title="@string/title_main"
-        app:titleTextColor="@color/white">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
+        <!-- Заголовок по центру -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/title_main"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <!-- Иконка профиля (избранное) -->
         <ImageView
             android:id="@+id/profileButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="end"
-            android:layout_marginEnd="8dp"
             android:src="@drawable/ic_person"
-            app:tint="@color/white" />
+            app:tint="@color/white"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
 
-    </androidx.appcompat.widget.Toolbar>
+    </LinearLayout>
     <!-- Поиск -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_margin="12dp"
         android:queryHint="@string/search_hint" />
-    <!-- Предупреждение о сети -->
-    <TextView
-        android:id="@+id/networkWarning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#FFF3CD"
-        android:gravity="center"
-        android:padding="12dp"
-        android:text="@string/no_internet"
-        android:textColor="#856404"
-        android:visibility="gone" />
 
-    <!-- RecyclerView -->
+    <!-- Список объектов -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -55,7 +59,7 @@
         android:layout_weight="1"
         android:padding="8dp" />
 
-    <!-- Состояния -->
+    <!-- Прогресс -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -64,6 +68,7 @@
         android:layout_marginTop="100dp"
         android:visibility="gone" />
 
+    <!-- Пусто / Ошибка -->
     <TextView
         android:id="@+id/emptyTextView"
         android:layout_width="wrap_content"
@@ -72,6 +77,7 @@
         android:layout_marginTop="100dp"
         android:text="@string/no_data"
         android:textColor="@color/gray"
+        android:textSize="18sp"
         android:visibility="gone" />
 
     <TextView
@@ -79,9 +85,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="100dp"
-        android:text="@string/error"
-        android:textColor="#FF0000"
+        android:layout_margin="16dp"
+        android:textColor="#D32F2F"
+        android:textSize="16sp"
         android:visibility="gone" />
 
     <Button
@@ -89,9 +95,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:background="@color/purple"
         android:text="@string/try_again"
+        android:backgroundTint="@color/purple"
         android:textColor="@color/white"
         android:visibility="gone" />
 

@@ -23,13 +23,12 @@ class FavoritesActivity : AppCompatActivity() {
         binding = ActivityFavoritesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbar()
+        setupHeader()
         setupRecyclerView()
         setupObservers()
     }
 
-    private fun setupToolbar() {
-        // Делаем иконку "Домой" в тулбаре кликабельной
+    private fun setupHeader() {
         binding.homeButton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -37,6 +36,7 @@ class FavoritesActivity : AppCompatActivity() {
             finish()
         }
     }
+
     private fun setupRecyclerView() {
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
@@ -63,17 +63,12 @@ class FavoritesActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
-        viewModel.favorites.observe(this) { favorites ->
-            adapter.submitList(favorites)
-
-            if (favorites.isEmpty()) {
-                binding.emptyTextView.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
-            } else {
-                binding.emptyTextView.visibility = View.GONE
-                binding.recyclerView.visibility = View.VISIBLE
-            }
+        viewModel.favorites.observe(this) { list ->
+            adapter.submitList(list)
+            binding.emptyTextView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+            binding.recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
         }
+
     }
 }
 

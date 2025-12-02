@@ -7,27 +7,48 @@
     android:orientation="vertical"
     android:background="@color/white">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <!-- Фиолетовая шапка вместо Toolbar -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="56dp"
         android:background="@color/purple"
-        android:title="@string/title_favorites"
-        android:titleTextColor="@color/white" >
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
+
+        <!-- Кнопка "Домой" -->
         <ImageView
             android:id="@+id/homeButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="8dp"
             android:src="@drawable/ic_home"
             app:tint="@color/white"
             android:clickable="true"
             android:focusable="true"
             android:background="?attr/selectableItemBackgroundBorderless" />
 
-    </androidx.appcompat.widget.Toolbar>
+        <!-- Заголовок по центру -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/title_favorites"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
 
+        <!-- Пустое место справа (для симметрии) -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+    </LinearLayout>
+
+    <!-- Список избранного -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -35,6 +56,7 @@
         android:layout_weight="1"
         android:padding="8dp" />
 
+    <!-- Текст, если пусто -->
     <TextView
         android:id="@+id/emptyTextView"
         android:layout_width="wrap_content"
@@ -43,6 +65,7 @@
         android:layout_marginTop="100dp"
         android:text="@string/no_favorites"
         android:textColor="@color/gray"
+        android:textSize="18sp"
         android:visibility="gone" />
 
 </LinearLayout>

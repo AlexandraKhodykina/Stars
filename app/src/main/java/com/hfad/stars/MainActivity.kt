@@ -26,21 +26,19 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupUI()
+        setupHeader()
+        setupRecyclerView()
         setupObservers()
 
-            //viewModel.loadData()
-        // Если хочешь принудительно обновить при запуске — можно вызвать:
-        viewModel.refresh()
+        viewModel.refresh() // первая загрузка
     }
 
-    private fun setupUI() {
-        binding.toolbar.title = getString(R.string.title_main)
-
+    private fun setupHeader() {
         binding.profileButton.setOnClickListener {
             startActivity(Intent(this, FavoritesActivity::class.java))
         }
-
+    }
+    private fun setupRecyclerView() {
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
                 val intent = Intent(this, DetailsActivity::class.java).apply {
@@ -50,12 +48,11 @@ class MainActivity : AppCompatActivity() {
             },
             onItemLongClick = { cosmicObject ->
                 viewModel.toggleFavorite(cosmicObject)
-                val message = if (!cosmicObject.isFavorite) {
-                    "${cosmicObject.name} добавлен в избранное"
-                } else {
-                    "${cosmicObject.name} удален из избранного"
-                }
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                val msg = if (cosmicObject.isFavorite)
+                    "Удалено из избранного"
+                else
+                    "Добавлено в избранное"
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 true
             }
         )
@@ -63,38 +60,19 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
         binding.recyclerView.adapter = adapter
 
-        binding.retryButton.setOnClickListener {
-            viewModel.refresh()
-        }
-
-        // Поиск
-        binding.searchView.setOnQueryTextListener(object :
-            androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                // Пока простой фильтр — можно улучшить позже
-                viewModel.search(newText ?: "")
-                return true
-            }
-        })
-
+        binding.retryButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun setupObservers() {
-        viewModel.cosmicObjects.observe(this) { objects ->
-            adapter.submitList(objects)
-
-            if (objects.isEmpty()) {
-                binding.emptyTextView.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
-            } else {
-                binding.emptyTextView.visibility = View.GONE
-                binding.recyclerView.visibility = View.VISIBLE
-            }
+        viewModel.cosmicObjects.observe(this) { list ->
+            adapter.submitList(list)
+            val isEmpty = list.isEmpty()
+            binding.emptyTextView.visibility = if (isEmpty) View.VISIBLE else View.GONE
+            binding.recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
         }
 
-        viewModel.isLoading.observe(this) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        viewModel.isLoading.observe(this) { loading ->
+            binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         }
 
         viewModel.error.observe(this) { error ->
@@ -102,12 +80,11 @@ class MainActivity : AppCompatActivity() {
                 binding.errorTextView.text = error
                 binding.errorTextView.visibility = View.VISIBLE
                 binding.retryButton.visibility = View.VISIBLE
-                binding.emptyTextView.visibility = View.GONE
             } else {
                 binding.errorTextView.visibility = View.GONE
                 binding.retryButton.visibility = View.GONE
             }
         }
-        // Убрали networkAvailable — больше не используется
     }
+
 }

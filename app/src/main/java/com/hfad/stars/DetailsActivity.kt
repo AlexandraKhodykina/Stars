@@ -19,11 +19,10 @@ class DetailsActivity : AppCompatActivity() {
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupToolbarButtons()
+        setupHeader()
         loadObject()
     }
-    private fun setupToolbarButtons() {
-        // Кнопка "Домой"
+    private fun setupHeader() {
         binding.homeButton.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -37,7 +36,7 @@ class DetailsActivity : AppCompatActivity() {
         // Кнопка сохранения
         binding.saveButton.setOnClickListener {
             viewModel.toggleFavorite()
-            Toast.makeText(this, "Объект сохранен", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Сохранено в избранное", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -46,28 +45,23 @@ class DetailsActivity : AppCompatActivity() {
 
         viewModel.loadObject(objectId)
 
-        viewModel.cosmicObject.observe(this) { cosmicObject ->
-            cosmicObject ?: return@observe
+        viewModel.cosmicObject.observe(this) { obj ->
+            obj ?: return@observe
 
-            binding.titleTextView.text = cosmicObject.name
-            binding.typeTextView.text = "Тип: ${cosmicObject.type ?: "Неизвестно"}"
-            binding.descriptionTextView.text = cosmicObject.description ?: "Нет описания"
+            binding.titleTextView.text = obj.name
+            binding.typeTextView.text = "Тип: ${obj.type ?: "Неизвестно"}"
+            binding.descriptionTextView.text = obj.description ?: "Нет описания"
 
-            cosmicObject.imageUrl?.let { url ->
-                Picasso.get()
-                    .load(url)
-                    .placeholder(R.drawable.ic_cosmo)
-                    .error(R.drawable.ic_cosmo)
-                    .into(binding.objectImageView)
+            obj.imageUrl?.let { url ->
+                Picasso.get().load(url).into(binding.objectImageView)
             }
 
-            // Обновляем текст кнопки
-            binding.saveButton.text = if (cosmicObject.isFavorite) {
+            binding.saveButton.text = if (obj.isFavorite)
                 "Убрать из избранного"
-            } else {
+            else
                 "Добавить в избранное"
-            }
         }
+
     }
 
 }

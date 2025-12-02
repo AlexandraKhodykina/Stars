@@ -7,38 +7,47 @@
     android:orientation="vertical"
     android:background="@color/white">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+    <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="56dp"
         android:background="@color/purple"
-        android:title="@string/title_details"
-        android:titleTextColor="@color/white">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
         <ImageView
             android:id="@+id/homeButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="8dp"
             android:src="@drawable/ic_home"
             app:tint="@color/white"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/title_details"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
 
         <ImageView
             android:id="@+id/profileButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="end"
-            android:layout_marginEnd="8dp"
             android:src="@drawable/ic_person"
             app:tint="@color/white"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:background="?attr/selectableItemBackgroundBorderless" />
 
-    </androidx.appcompat.widget.Toolbar>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -53,8 +62,7 @@
             <ImageView
                 android:id="@+id/objectImageView"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_gravity="center_horizontal"
+                android:layout_height="250dp"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_cosmo" />
 
