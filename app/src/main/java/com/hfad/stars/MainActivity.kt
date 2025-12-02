@@ -29,7 +29,9 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupObservers()
 
-        viewModel.loadData()
+            //viewModel.loadData()
+        // Если хочешь принудительно обновить при запуске — можно вызвать:
+        viewModel.refresh()
     }
 
     private fun setupUI() {
@@ -65,17 +67,17 @@ class MainActivity : AppCompatActivity() {
             viewModel.refresh()
         }
 
-        // Настройка поиска (теперь searchView точно есть в макете)
-        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
-
+        // Поиск
+        binding.searchView.setOnQueryTextListener(object :
+            androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
+                // Пока простой фильтр — можно улучшить позже
                 viewModel.search(newText ?: "")
                 return true
             }
         })
+
     }
 
     private fun setupObservers() {
@@ -100,14 +102,12 @@ class MainActivity : AppCompatActivity() {
                 binding.errorTextView.text = error
                 binding.errorTextView.visibility = View.VISIBLE
                 binding.retryButton.visibility = View.VISIBLE
+                binding.emptyTextView.visibility = View.GONE
             } else {
                 binding.errorTextView.visibility = View.GONE
                 binding.retryButton.visibility = View.GONE
             }
         }
-
-        viewModel.networkAvailable.observe(this) { isAvailable ->
-            binding.networkWarning.visibility = if (!isAvailable) View.VISIBLE else View.GONE
-        }
+        // Убрали networkAvailable — больше не используется
     }
 }
