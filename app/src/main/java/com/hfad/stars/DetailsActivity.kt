@@ -55,16 +55,14 @@ class DetailsActivity : AppCompatActivity() {
 
                     // Загружаем изображение
                     cosmicObject.imageUrl?.let { url ->
-                        Picasso.get()
-                            .load(url)
-                            .into(binding.objectImageView)
+                        Picasso.get().load(url).into(binding.objectImageView)
                     }
 
-                    // Обновляем кнопку
-                    if (cosmicObject.isFavorite) {
-                        binding.saveButton.text = getString(R.string.remove_from_favorites)
+                    // Обновляем текст кнопки
+                    binding.saveButton.text = if (cosmicObject.isFavorite) {
+                        getString(R.string.remove_from_favorites)
                     } else {
-                        binding.saveButton.text = getString(R.string.add_to_favorites)
+                        getString(R.string.add_to_favorites)
                     }
                 }
             }

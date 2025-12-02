@@ -21,8 +21,8 @@ class DetailsViewModel(application: Application) : AndroidViewModel(application)
     fun loadObject(objectId: String) {
         viewModelScope.launch {
             try {
-                val cosmicObject = repository.getObjectById(objectId)
-                _cosmicObject.value = cosmicObject
+                val obj = repository.getObjectById(objectId)
+                _cosmicObject.value = obj
                 _error.value = ""
             } catch (e: Exception) {
                 _error.value = "Не удалось загрузить объект"
@@ -30,13 +30,16 @@ class DetailsViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ИСПРАВЛЕНО: теперь используем setFavorite вместо toggleFavorite
     fun toggleFavorite() {
         viewModelScope.launch {
-            val currentObject = _cosmicObject.value ?: return@launch
-            repository.toggleFavorite(currentObject.id, currentObject.isFavorite)
+            val current = _cosmicObject.value ?: return@launch
+            val newStatus = !current.isFavorite
+            repository.setFavorite(current.id, newStatus)
 
-            // Обновляем объект после изменения
-            loadObject(currentObject.id)
+            // Обновляем объект, чтобы UI сразу увидело изменения
+            _cosmicObject.value = current.copy(isFavorite = newStatus)
         }
     }
+
 }
