@@ -27,47 +27,50 @@ class FavoritesActivity : AppCompatActivity() {
         setupObservers()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Сбрасываем режим выбора каждый раз при открытии экрана
+        adapter.setSelectionMode(false)
+        binding.deleteButton.visibility = View.GONE
+    }
+
     private fun setupHeader() {
+        // Кнопка «Домой»
         binding.homeButton.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
             startActivity(intent)
             finish()
         }
-        // Кнопка удаления
+
+        // Кнопка «Мусорка» — удаление выбранных
         binding.deleteButton.setOnClickListener {
             val selected = adapter.getSelectedItems()
             if (selected.isNotEmpty()) {
-                selected.forEach { cosmicObject ->
-                    viewModel.removeFromFavorites(cosmicObject)
-                }
+                selected.forEach { viewModel.removeFromFavorites(it) }
                 adapter.setSelectionMode(false)
                 binding.deleteButton.visibility = View.GONE
-                Toast.makeText(this, "Удалено ${selected.size} объектов", Toast.LENGTH_SHORT).show()
             }
         }
-
     }
 
     private fun setupRecyclerView() {
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
-                // Открываем детальную страницу
+                // Обычный клик — открываем детали
                 val intent = Intent(this, DetailsActivity::class.java).apply {
                     putExtra("object_id", cosmicObject.id)
                 }
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                // Включаем режим выбора при долгом клике
-                if (!adapter.isSelectionMode) {
-                    adapter.setSelectionMode(true)
-                    binding.deleteButton.visibility = View.VISIBLE
-                }
+                // Долгое нажатие — включаем режим выбора и показываем мусорку
+                adapter.setSelectionMode(true)
+                binding.deleteButton.visibility = View.VISIBLE
                 true
             }
         )
-
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
@@ -76,15 +79,18 @@ class FavoritesActivity : AppCompatActivity() {
     private fun setupObservers() {
         viewModel.favorites.observe(this) { list ->
             adapter.submitList(list)
+
             binding.emptyTextView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
             binding.recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
-        }
 
+            // Если список пустой — гарантированно убираем мусорку
+            if (list.isEmpty()) {
+                adapter.setSelectionMode(false)
+                binding.deleteButton.visibility = View.GONE
+            }
+        }
     }
 }
-
-
-
 
 
 
