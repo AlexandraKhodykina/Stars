@@ -42,13 +42,9 @@ private val onItemLongClick: (CosmicObject) -> Unit
 
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
         private val titleTextView: TextView = itemView.findViewById(R.id.titleTextView)
-        private val favoriteIcon: ImageView? = itemView.findViewById(R.id.favoriteIcon)
 
         fun bind(cosmicObject: CosmicObject) {
             titleTextView.text = cosmicObject.name
-
-            // Показываем иконку избранного
-            favoriteIcon?.visibility = if (cosmicObject.isFavorite) View.VISIBLE else View.GONE
 
             // Загружаем изображение
             cosmicObject.imageUrl?.let { url ->

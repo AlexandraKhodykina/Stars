@@ -29,20 +29,16 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupObservers()
 
-        // Загружаем данные (убрал тестовые данные)
         viewModel.loadData()
     }
 
     private fun setupUI() {
-        // Настройка Toolbar
         binding.toolbar.title = getString(R.string.title_main)
 
-        // Кнопка профиля
         binding.profileButton.setOnClickListener {
             startActivity(Intent(this, FavoritesActivity::class.java))
         }
 
-        // Настройка списка
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
                 val intent = Intent(this, DetailsActivity::class.java).apply {
@@ -51,10 +47,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                // Долгое нажатие в главном экране - добавляем/удаляем из избранного
                 viewModel.toggleFavorite(cosmicObject)
-
-                // Показываем уведомление (инвертируем текущее состояние)
                 val message = if (!cosmicObject.isFavorite) {
                     "${cosmicObject.name} добавлен в избранное"
                 } else {
@@ -68,13 +61,12 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
         binding.recyclerView.adapter = adapter
 
-        // Кнопка повтора
         binding.retryButton.setOnClickListener {
             viewModel.refresh()
         }
 
-        // Поле поиска (если есть в макете)
-        binding.searchView?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+        // Настройка поиска (теперь searchView точно есть в макете)
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
             }

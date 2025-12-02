@@ -27,15 +27,12 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
             _isEmpty.value = objects.isEmpty()
         }
     }
-    // Функция удаления объекта
     fun deleteFavorite(cosmicObject: CosmicObject) {
         viewModelScope.launch {
             try {
-                // Используем новый метод
-                repository.removeFromFavorites(cosmicObject.id)
+                // ИСПРАВЛЕНО: Используем правильное имя параметра - currentStatus
+                repository.toggleFavorite(cosmicObject.id, currentStatus = true)
                 _deleteSuccess.value = true
-
-                // Показать Toast лучше в Activity, а не здесь
             } catch (e: Exception) {
                 _deleteSuccess.value = false
             }

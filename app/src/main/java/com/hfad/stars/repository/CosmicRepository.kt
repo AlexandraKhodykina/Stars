@@ -81,7 +81,9 @@ class CosmicRepository(context: Context) {
     fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
 
     suspend fun toggleFavorite(id: String, currentStatus: Boolean) {
-        dao.updateFavorite(id, !currentStatus)
+        withContext(Dispatchers.IO) {
+            dao.updateFavorite(id, !currentStatus)
+        }
     }
 
     suspend fun getObjectById(id: String): CosmicObject? {

@@ -28,7 +28,13 @@
             app:tint="@color/white" />
 
     </androidx.appcompat.widget.Toolbar>
-
+    <!-- Поиск -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:queryHint="@string/search_hint" />
     <!-- Предупреждение о сети -->
     <TextView
         android:id="@+id/networkWarning"

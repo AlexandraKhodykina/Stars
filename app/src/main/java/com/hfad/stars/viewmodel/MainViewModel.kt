@@ -37,22 +37,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _error.value = ""
 
             try {
-                // Проверяем доступность сети
                 val isNetworkAvailable = repository.isNetworkAvailable(getApplication())
                 _networkAvailable.value = isNetworkAvailable
-                Log.d("MainViewModel", "Сеть доступна: $isNetworkAvailable")
 
-                // Загружаем данные (репозиторий сам решит, откуда брать)
+                // Получаем данные из репозитория
                 repository.getAllObjects().observeForever { objects ->
                     _cosmicObjects.value = objects
-                    Log.d("MainViewModel", "Получено ${objects.size} объектов")
 
-                    if (objects.isEmpty()) {
-                        if (isNetworkAvailable) {
-                            _error.value = "Нет данных для отображения"
-                        } else {
-                            _error.value = "Нет подключения к интернету"
-                        }
+                    if (objects.isEmpty() && isNetworkAvailable) {
+                        _error.value = "Нет данных для отображения"
                     }
                 }
 
@@ -66,38 +59,56 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _error.value = "Ошибка загрузки: ${e.localizedMessage}"
             } finally {
                 _isLoading.value = false
-                Log.d("MainViewModel", "Загрузка завершена")
             }
         }
     }
+
+    fun search(query: String) {
+        // Получаем текущий список из LiveData
+        val currentList = _cosmicObjects.value ?: emptyList()
+
+        if (query.isEmpty()) {
+            // Если запрос пустой, показываем все объекты
+            // Для этого нужно перезагрузить данные
+            loadData()
+        } else {
+            // Фильтруем по запросу
+            val filtered = currentList.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.description?.contains(query, ignoreCase = true) == true
+            }
+            _cosmicObjects.value = filtered
+        }
+    }
+
 
     fun toggleFavorite(cosmicObject: CosmicObject) {
         viewModelScope.launch {
             try {
                 Log.d("MainViewModel", "Переключение избранного для: ${cosmicObject.name}")
 
-                // Получаем актуальный объект из БД, чтобы узнать текущий статус
+                // Получаем актуальный объект из БД
                 val currentObject = repository.getObjectById(cosmicObject.id)
 
                 currentObject?.let { obj ->
                     Log.d("MainViewModel", "Текущий статус isFavorite: ${obj.isFavorite}")
 
-                    // Инвертируем статус
-                    val newFavoriteStatus = !obj.isFavorite
+                    // ВАЖНО: Передаем id и текущий статус!
                     repository.toggleFavorite(cosmicObject.id, obj.isFavorite)
 
-                    Log.d("MainViewModel", "Новый статус isFavorite: $newFavoriteStatus")
+                    // Обновляем в локальном списке
+                    updateItemInList(cosmicObject.id, !obj.isFavorite)
 
-                    // Обновляем локальный список
-                    updateItemInList(cosmicObject.id, newFavoriteStatus)
-                } ?: run {
-                    Log.w("MainViewModel", "Объект не найден в БД: ${cosmicObject.id}")
+                    Log.d("MainViewModel", "Новый статус isFavorite: ${!obj.isFavorite}")
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Ошибка переключения избранного", e)
+                _error.value = "Не удалось обновить избранное"
             }
         }
     }
+
+
 
     private fun updateItemInList(id: String, isFavorite: Boolean) {
         val currentList = _cosmicObjects.value?.toMutableList() ?: return
@@ -114,38 +125,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadData()
     }
 
-    fun search(query: String) {
-        // Простой поиск по уже загруженным данным
-        val currentList = repository.getAllObjects().value ?: emptyList()
-        if (query.isEmpty()) {
-            _cosmicObjects.value = currentList
-        } else {
-            val filtered = currentList.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.description?.contains(query, ignoreCase = true) == true
-            }
-            _cosmicObjects.value = filtered
-        }
-    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
