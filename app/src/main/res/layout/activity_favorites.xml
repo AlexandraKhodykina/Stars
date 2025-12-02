@@ -32,7 +32,7 @@
 
         <!-- Заголовок по центру -->
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="269dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
@@ -41,10 +41,17 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Пустое место справа (для симметрии) -->
-        <View
+        <!-- Кнопка "Мусорка" (появляется в режиме выбора) -->
+        <ImageView
+            android:id="@+id/deleteButton"
             android:layout_width="40dp"
-            android:layout_height="40dp" />
+            android:layout_height="40dp"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/white"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:visibility="gone" />
 
     </LinearLayout>
 

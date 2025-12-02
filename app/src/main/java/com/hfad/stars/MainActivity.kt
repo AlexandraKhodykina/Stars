@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
         setupHeader()
         setupRecyclerView()
+        setupSearch()
         setupObservers()
 
         viewModel.refresh() // первая загрузка
@@ -48,11 +49,6 @@ class MainActivity : AppCompatActivity() {
             },
             onItemLongClick = { cosmicObject ->
                 viewModel.toggleFavorite(cosmicObject)
-                val msg = if (cosmicObject.isFavorite)
-                    "Удалено из избранного"
-                else
-                    "Добавлено в избранное"
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
                 true
             }
         )
@@ -61,6 +57,20 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter = adapter
 
         binding.retryButton.setOnClickListener { viewModel.refresh() }
+    }
+
+    private fun setupSearch() {
+        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val query = newText?.trim() ?: ""
+                viewModel.search(query)  // ← Вот он — поиск!
+                return true
+            }
+        })
     }
 
     private fun setupObservers() {
@@ -86,5 +96,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }

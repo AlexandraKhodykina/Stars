@@ -13,8 +13,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = CosmicRepository(application)
 
-    // Прямой LiveData из репозитория — всё само обновляется!
-    val cosmicObjects: LiveData<List<CosmicObject>> = repository.getAllObjects()
+    private val _cosmicObjects = MutableLiveData<List<CosmicObject>>()
+    val cosmicObjects: LiveData<List<CosmicObject>> = _cosmicObjects
 
     private val _isLoading = androidx.lifecycle.MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
@@ -32,6 +32,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _error.value = ""
             try {
                 repository.refreshFromNetwork()
+                // После обновления показываем все объекты
+                repository.getAllObjects().observeForever { list ->
+                    _cosmicObjects.value = list
+                }
             } catch (e: Exception) {
                 _error.value = "Ошибка загрузки данных"
             } finally {
@@ -40,6 +44,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+
     fun toggleFavorite(cosmicObject: CosmicObject) {
         viewModelScope.launch {
             val newStatus = !cosmicObject.isFavorite
@@ -47,10 +52,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Поиск можно реализовать через отдельный запрос или Flow (пока заглушка)
+    // Обновлённый метод поиска
     fun search(query: String) {
-        // Пока просто обновляем — потом сделаем настоящий поиск
-        refresh()
+        if (query.isEmpty()) {
+            repository.getAllObjects().observeForever { list ->
+                _cosmicObjects.value = list
+            }
+        } else {
+            repository.searchObjects(query).observeForever { list ->
+                _cosmicObjects.value = list
+            }
+        }
     }
+
 }
 

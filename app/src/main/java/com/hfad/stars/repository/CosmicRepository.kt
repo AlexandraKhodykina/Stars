@@ -38,6 +38,9 @@ class CosmicRepository(context: Context) {
     // Избранное
     fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
 
+    // Новый метод для поиска
+    fun searchObjects(query: String): LiveData<List<CosmicObject>> = dao.searchObjects(query)
+
     // Блокирующий запрос — нужен для сохранения isFavorite при обновлении
     suspend fun getAllObjectsBlocking(): List<CosmicObject> = withContext(Dispatchers.IO) {
         dao.getAllObjectsBlocking()
@@ -78,8 +81,6 @@ class CosmicRepository(context: Context) {
         dao.updateFavorite(id, isFavorite)
     }
 
-
-
     suspend fun getObjectById(id: String): CosmicObject? = withContext(Dispatchers.IO) {
         dao.getObjectById(id)
     }
@@ -94,6 +95,5 @@ class CosmicRepository(context: Context) {
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
-
 }
 

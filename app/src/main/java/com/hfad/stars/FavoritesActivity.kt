@@ -11,7 +11,6 @@ import com.hfad.stars.viewmodel.FavoritesViewModel
 import android.widget.Toast
 import androidx.activity.viewModels
 
-
 class FavoritesActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityFavoritesBinding
@@ -35,6 +34,19 @@ class FavoritesActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+        // Кнопка удаления
+        binding.deleteButton.setOnClickListener {
+            val selected = adapter.getSelectedItems()
+            if (selected.isNotEmpty()) {
+                selected.forEach { cosmicObject ->
+                    viewModel.removeFromFavorites(cosmicObject)
+                }
+                adapter.setSelectionMode(false)
+                binding.deleteButton.visibility = View.GONE
+                Toast.makeText(this, "Удалено ${selected.size} объектов", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
     private fun setupRecyclerView() {
@@ -47,16 +59,15 @@ class FavoritesActivity : AppCompatActivity() {
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                // Удаляем из избранного долгим нажатием
-                viewModel.removeFromFavorites(cosmicObject)
-                Toast.makeText(
-                    this,
-                    "${cosmicObject.name} удалён из избранного",
-                    Toast.LENGTH_SHORT
-                ).show()
+                // Включаем режим выбора при долгом клике
+                if (!adapter.isSelectionMode) {
+                    adapter.setSelectionMode(true)
+                    binding.deleteButton.visibility = View.VISIBLE
+                }
                 true
             }
         )
+
 
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
