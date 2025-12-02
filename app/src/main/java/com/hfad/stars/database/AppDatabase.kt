@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 import com.hfad.stars.model.CosmicObject
 
 
-@Database(entities = [CosmicObject::class], version = 1)
+@Database(entities = [CosmicObject::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun cosmicObjectDao(): CosmicObjectDao
@@ -21,7 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "stars.db"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

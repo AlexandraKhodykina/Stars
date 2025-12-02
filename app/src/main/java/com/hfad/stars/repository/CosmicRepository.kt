@@ -7,19 +7,26 @@ import com.hfad.stars.database.AppDatabase
 import com.hfad.stars.database.CosmicObjectDao
 import com.hfad.stars.model.CosmicObject
 import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.*
+import android.util.Log
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 
 class CosmicRepository(context: Context) {
-
     private val dao = AppDatabase.getDatabase(context).cosmicObjectDao()
+    private val appContext = context.applicationContext
 
-    private val nasaService: NASAApiService by lazy {
+    private val _allObjects = MutableLiveData<List<CosmicObject>>()
+
+    private val nasaApi: NASAApiService by lazy {
         Retrofit.Builder()
             .baseUrl("https://api.nasa.gov/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -28,54 +35,59 @@ class CosmicRepository(context: Context) {
     }
 
     // Получить все объекты
-    suspend fun getAllObjects(forceRefresh: Boolean = false): LiveData<List<CosmicObject>> {
-        return withContext(Dispatchers.IO) {
-            // Проверяем, нужно ли обновить из сети
-            if (forceRefresh) {
-                try {
-                    // Загружаем только APOD для простоты
-                    val response = nasaService.getAPOD(count = 20)
-                    if (response.isSuccessful) {
-                        response.body()?.let { objects ->
-                            dao.insertAll(objects)
+    fun getAllObjects(): LiveData<List<CosmicObject>> {
+        // Сначала подписываемся на данные из БД
+        dao.getAllObjects().observeForever { objects ->
+            _allObjects.value = objects
+        }
+        return _allObjects
+    }
+
+    // Загрузить из сети и сохранить в БД
+    fun refreshFromNetwork() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Log.d("CosmicRepository", "Загрузка данных из NASA API")
+                val response = nasaApi.getAPOD()
+
+                if (response.isSuccessful) {
+                    response.body()?.let { objects ->
+                        Log.d("CosmicRepository", "Получено ${objects.size} объектов из API")
+
+                        // Получаем текущие объекты из БД для сохранения статуса избранного
+                        val currentObjects = dao.getAllObjects().value ?: emptyList()
+
+                        val objectsWithFavorites = objects.map { apiObject ->
+                            // Находим соответствующий объект в БД
+                            val existing = currentObjects.find { it.id == apiObject.id }
+                            // Сохраняем статус избранного если объект уже есть в БД
+                            apiObject.copy(isFavorite = existing?.isFavorite ?: false)
                         }
+
+                        // Сохраняем в БД
+                        dao.insertAll(objectsWithFavorites)
+                        Log.d("CosmicRepository", "Данные сохранены в БД")
                     }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } else {
+                    Log.e("CosmicRepository", "Ошибка API: ${response.code()}")
                 }
+            } catch (e: Exception) {
+                Log.e("CosmicRepository", "Сетевая ошибка: ${e.message}", e)
             }
-            dao.getAllObjects()
         }
     }
 
-    // Получить избранные
-    fun getFavorites(): LiveData<List<CosmicObject>> {
-        return dao.getFavorites()
+    // Избранное
+    fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
+
+    suspend fun toggleFavorite(id: String, currentStatus: Boolean) {
+        dao.updateFavorite(id, !currentStatus)
     }
 
-    // Поиск
-    fun search(query: String): LiveData<List<CosmicObject>> {
-        return dao.searchObjects(query)
-    }
-
-    // Получить по ID
     suspend fun getObjectById(id: String): CosmicObject? {
-        return withContext(Dispatchers.IO) {
-            dao.getObjectById(id)
-        }
+        return dao.getObjectById(id)
     }
 
-    // Переключить избранное
-    suspend fun toggleFavorite(objectId: String, isCurrentlyFavorite: Boolean) {
-        withContext(Dispatchers.IO) {
-            dao.updateFavorite(objectId, !isCurrentlyFavorite)
-        }
-    }
-    suspend fun removeFromFavorites(objectId: String) {
-        withContext(Dispatchers.IO) {
-            dao.updateFavorite(objectId, false) // Просто устанавливаем isFavorite = false
-        }
-    }
     // Проверка сети
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
@@ -94,36 +106,3 @@ class CosmicRepository(context: Context) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

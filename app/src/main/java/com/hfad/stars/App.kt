@@ -4,15 +4,16 @@ import android.app.Application
 class App : Application() {
 
     companion object {
-        private var instance: App? = null
-
-        fun getInstance(): App {
-            return instance ?: throw IllegalStateException("Application не инициализирован")
-        }
+        private var _instance: App? = null
+        val instance: App
+            get() = _instance ?: throw IllegalStateException("Application не инициализирован")
     }
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
+        _instance = this
+
+        // Можно добавить инициализацию здесь, если нужно
+        // Например, инициализацию базы данных или других компонентов
     }
 }

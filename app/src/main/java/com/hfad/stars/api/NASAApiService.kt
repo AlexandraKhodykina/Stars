@@ -1,4 +1,5 @@
 package com.hfad.stars.api
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -12,7 +13,6 @@ interface NASAApiService {
     suspend fun getAPOD(
         @Query("api_key") apiKey: String = "DEMO_KEY",
         @Query("count") count: Int = 10,
-        @Query("start_date") startDate: String? = null
     ): Response<List<CosmicObject>>
 
     // Near Earth Objects

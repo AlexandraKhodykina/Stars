@@ -5,8 +5,8 @@ import com.hfad.stars.model.CosmicObject
 
 @Dao
 interface CosmicObjectDao {
-    // Получить все объекты (не избранные)
-    @Query("SELECT * FROM cosmic_objects WHERE isFavorite = 0")
+    // Получить все объекты
+    @Query("SELECT * FROM cosmic_objects")
     fun getAllObjects(): LiveData<List<CosmicObject>>
 
     // Получить избранные

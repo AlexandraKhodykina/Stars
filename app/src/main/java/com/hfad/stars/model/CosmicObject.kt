@@ -9,16 +9,16 @@ import com.google.gson.annotations.SerializedName
 data class CosmicObject(
     @PrimaryKey
     @SerializedName("id")
-    val id: String,
+    val id: String = "",
 
     @SerializedName("title")
-    val name: String,
+    val name: String = "",
 
     @SerializedName("explanation")
-    val description: String?,
+    val description: String? = null,
 
     @SerializedName("url")
-    val imageUrl: String?,
+    val imageUrl: String? = null,
 
     @SerializedName("media_type")
     val type: String? = null,
@@ -26,9 +26,11 @@ data class CosmicObject(
     @SerializedName("date")
     val date: String? = null,
 
-    val isFavorite: Boolean = false,
+    @SerializedName("thumbnail_url")
+    val thumbnailUrl: String? = null,
 
-    val distance: String? = null,
+    @SerializedName("hdurl")
+    val hdUrl: String? = null,
 
-    val size: String? = null
+    val isFavorite: Boolean = false
 )

@@ -40,7 +40,7 @@ class FavoritesActivity : AppCompatActivity() {
 
         // Создаем адаптер с лямбдой
         adapter = CosmicObjectAdapter(
-            onltemClick = { cosmicObject ->
+            onItemClick = { cosmicObject ->
                 // Обычный клик - открываем детали
                 val intent = Intent(this, DetailsActivity::class.java).apply {
                     putExtra("object_id", cosmicObject.id)
@@ -77,7 +77,6 @@ class FavoritesActivity : AppCompatActivity() {
             }
         }
     }
-
 }
 
 

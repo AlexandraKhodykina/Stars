@@ -12,7 +12,6 @@ import com.hfad.stars.adapter.CosmicObjectAdapter
 import com.hfad.stars.databinding.ActivityMainBinding
 import com.hfad.stars.viewmodel.MainViewModel
 import android.view.View
-import androidx.activity.viewModels
 import android.widget.Toast
 
 
@@ -30,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         setupUI()
         setupObservers()
 
-        // Загружаем данные
+        // Загружаем данные (убрал тестовые данные)
         viewModel.loadData()
     }
 
@@ -45,7 +44,7 @@ class MainActivity : AppCompatActivity() {
 
         // Настройка списка
         adapter = CosmicObjectAdapter(
-            onltemClick = { cosmicObject ->
+            onItemClick = { cosmicObject ->
                 val intent = Intent(this, DetailsActivity::class.java).apply {
                     putExtra("object_id", cosmicObject.id)
                 }
@@ -55,14 +54,13 @@ class MainActivity : AppCompatActivity() {
                 // Долгое нажатие в главном экране - добавляем/удаляем из избранного
                 viewModel.toggleFavorite(cosmicObject)
 
-                // Показываем уведомление
-                val message = if (cosmicObject.isFavorite) {
+                // Показываем уведомление (инвертируем текущее состояние)
+                val message = if (!cosmicObject.isFavorite) {
                     "${cosmicObject.name} добавлен в избранное"
                 } else {
                     "${cosmicObject.name} удален из избранного"
                 }
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-
                 true
             }
         )
@@ -74,6 +72,18 @@ class MainActivity : AppCompatActivity() {
         binding.retryButton.setOnClickListener {
             viewModel.refresh()
         }
+
+        // Поле поиска (если есть в макете)
+        binding.searchView?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.search(newText ?: "")
+                return true
+            }
+        })
     }
 
     private fun setupObservers() {
