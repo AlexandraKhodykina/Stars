@@ -48,13 +48,8 @@ class FavoritesActivity : AppCompatActivity() {
                 startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                // Долгий клик - удаляем из избранного
-                viewModel.deleteFavorite(cosmicObject)
-                Toast.makeText(
-                    this,
-                    "${cosmicObject.name} удален из избранного",
-                    Toast.LENGTH_SHORT
-                ).show()
+                viewModel.removeFromFavorites(cosmicObject)
+                Toast.makeText(this, "${cosmicObject.name} удалён из избранного", Toast.LENGTH_SHORT).show()
                 true
             }
         )

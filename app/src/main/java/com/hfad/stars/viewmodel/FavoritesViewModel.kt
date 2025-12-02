@@ -15,27 +15,9 @@ class FavoritesViewModel(application: Application) : AndroidViewModel(applicatio
 
     val favorites: LiveData<List<CosmicObject>> = repository.getFavorites()
 
-    private val _isEmpty = MutableLiveData<Boolean>()
-    val isEmpty: LiveData<Boolean> = _isEmpty
-
-    private val _deleteSuccess = MutableLiveData<Boolean>()
-    val deleteSuccess: LiveData<Boolean> = _deleteSuccess
-
-    init {
-        // Наблюдаем за изменением избранных
-        favorites.observeForever { objects ->
-            _isEmpty.value = objects.isEmpty()
-        }
-    }
-    fun deleteFavorite(cosmicObject: CosmicObject) {
+    fun removeFromFavorites(cosmicObject: CosmicObject) {
         viewModelScope.launch {
-            try {
-                // ИСПРАВЛЕНО: Используем правильное имя параметра - currentStatus
-                repository.toggleFavorite(cosmicObject.id, currentStatus = true)
-                _deleteSuccess.value = true
-            } catch (e: Exception) {
-                _deleteSuccess.value = false
-            }
+            repository.setFavorite(cosmicObject.id, false)
         }
     }
 

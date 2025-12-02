@@ -13,117 +13,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = CosmicRepository(application)
 
-    private val _cosmicObjects = MutableLiveData<List<CosmicObject>>()
-    val cosmicObjects: LiveData<List<CosmicObject>> = _cosmicObjects
+    // Прямой LiveData из репозитория — всё само обновляется!
+    val cosmicObjects: LiveData<List<CosmicObject>> = repository.getAllObjects()
 
-    private val _isLoading = MutableLiveData<Boolean>()
+    private val _isLoading = androidx.lifecycle.MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private val _error = MutableLiveData<String>()
+    private val _error = androidx.lifecycle.MutableLiveData<String>()
     val error: LiveData<String> = _error
 
-    private val _networkAvailable = MutableLiveData<Boolean>()
-    val networkAvailable: LiveData<Boolean> = _networkAvailable
-
     init {
-        Log.d("MainViewModel", "ViewModel создан")
-        loadData()
+        refresh() // Первая загрузка при создании
     }
 
-    fun loadData() {
+    fun refresh() {
         viewModelScope.launch {
-            Log.d("MainViewModel", "Начало загрузки данных")
             _isLoading.value = true
             _error.value = ""
-
             try {
-                val isNetworkAvailable = repository.isNetworkAvailable(getApplication())
-                _networkAvailable.value = isNetworkAvailable
-
-                // Получаем данные из репозитория
-                repository.getAllObjects().observeForever { objects ->
-                    _cosmicObjects.value = objects
-
-                    if (objects.isEmpty() && isNetworkAvailable) {
-                        _error.value = "Нет данных для отображения"
-                    }
-                }
-
-                // Загружаем обновления из сети если есть соединение
-                if (isNetworkAvailable) {
-                    repository.refreshFromNetwork()
-                }
-
+                repository.refreshFromNetwork()
             } catch (e: Exception) {
-                Log.e("MainViewModel", "Ошибка загрузки: ${e.message}", e)
-                _error.value = "Ошибка загрузки: ${e.localizedMessage}"
+                _error.value = "Ошибка загрузки данных"
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun search(query: String) {
-        // Получаем текущий список из LiveData
-        val currentList = _cosmicObjects.value ?: emptyList()
-
-        if (query.isEmpty()) {
-            // Если запрос пустой, показываем все объекты
-            // Для этого нужно перезагрузить данные
-            loadData()
-        } else {
-            // Фильтруем по запросу
-            val filtered = currentList.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.description?.contains(query, ignoreCase = true) == true
-            }
-            _cosmicObjects.value = filtered
-        }
-    }
-
-
     fun toggleFavorite(cosmicObject: CosmicObject) {
         viewModelScope.launch {
-            try {
-                Log.d("MainViewModel", "Переключение избранного для: ${cosmicObject.name}")
-
-                // Получаем актуальный объект из БД
-                val currentObject = repository.getObjectById(cosmicObject.id)
-
-                currentObject?.let { obj ->
-                    Log.d("MainViewModel", "Текущий статус isFavorite: ${obj.isFavorite}")
-
-                    // ВАЖНО: Передаем id и текущий статус!
-                    repository.toggleFavorite(cosmicObject.id, obj.isFavorite)
-
-                    // Обновляем в локальном списке
-                    updateItemInList(cosmicObject.id, !obj.isFavorite)
-
-                    Log.d("MainViewModel", "Новый статус isFavorite: ${!obj.isFavorite}")
-                }
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "Ошибка переключения избранного", e)
-                _error.value = "Не удалось обновить избранное"
-            }
+            val newStatus = !cosmicObject.isFavorite
+            repository.setFavorite(cosmicObject.id, newStatus)
         }
     }
 
-
-
-    private fun updateItemInList(id: String, isFavorite: Boolean) {
-        val currentList = _cosmicObjects.value?.toMutableList() ?: return
-        val index = currentList.indexOfFirst { it.id == id }
-        if (index != -1) {
-            val updatedObject = currentList[index].copy(isFavorite = isFavorite)
-            currentList[index] = updatedObject
-            _cosmicObjects.value = currentList
-        }
+    // Поиск можно реализовать через отдельный запрос или Flow (пока заглушка)
+    fun search(query: String) {
+        // Пока просто обновляем — потом сделаем настоящий поиск
+        refresh()
     }
-
-    fun refresh() {
-        Log.d("MainViewModel", "Принудительное обновление данных")
-        loadData()
-    }
-
 }
 

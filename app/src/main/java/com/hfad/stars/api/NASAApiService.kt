@@ -12,8 +12,7 @@ interface NASAApiService {
     @GET("planetary/apod")
     suspend fun getAPOD(
         @Query("api_key") apiKey: String = "yZGDPznGxJMuDfAj2eUb7v0GocJcLfeZnljG8OFQ",
-        @Query("count") count: Int = 10,
-        @Query("thumbs") thumbs: Boolean = true
+        @Query("count") count: Int = 20
     ): Response<List<CosmicObject>>
 
     // Near Earth Objects

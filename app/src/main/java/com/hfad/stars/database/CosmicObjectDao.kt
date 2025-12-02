@@ -8,6 +8,8 @@ interface CosmicObjectDao {
     // Получить все объекты
     @Query("SELECT * FROM cosmic_objects")
     fun getAllObjects(): LiveData<List<CosmicObject>>
+    @Query("SELECT * FROM cosmic_objects")
+    fun getAllObjectsBlocking(): List<CosmicObject>
 
     // Получить избранные
     @Query("SELECT * FROM cosmic_objects WHERE isFavorite = 1")

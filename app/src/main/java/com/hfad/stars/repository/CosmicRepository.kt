@@ -24,96 +24,76 @@ class CosmicRepository(context: Context) {
     private val dao = AppDatabase.getDatabase(context).cosmicObjectDao()
     private val appContext = context.applicationContext
 
-    private val nasaApi: NASAApiService by lazy {
+    private val nasaApi by lazy {
         Retrofit.Builder()
             .baseUrl("https://api.nasa.gov/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(NASAApiService::class.java)
+            .create(com.hfad.stars.api.NASAApiService::class.java)
     }
 
-    // Получить все объекты - ПРОСТО возвращаем LiveData из DAO
-    fun getAllObjects(): LiveData<List<CosmicObject>> {
-        return dao.getAllObjects()
-    }
-
-    // Загрузить из сети и сохранить в БД
-    fun refreshFromNetwork() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                Log.d("CosmicRepository", "Загрузка данных из NASA API")
-                val response = nasaApi.getAPOD()
-
-                if (response.isSuccessful) {
-                    response.body()?.let { objects ->
-                        Log.d("CosmicRepository", "Получено ${objects.size} объектов из API")
-
-                        // Логируем первые 3 объекта для отладки
-                        objects.take(3).forEachIndexed { index, obj ->
-                            Log.d("CosmicRepository", "Объект $index: id=${obj.id}, name=${obj.name}")
-                        }
-
-                        // Получаем текущие объекты из БД для сохранения статуса избранного
-                        val currentObjects = dao.getAllObjects().value ?: emptyList()
-                        Log.d("CosmicRepository", "Текущих объектов в БД: ${currentObjects.size}")
-
-                        val objectsWithFavorites = objects.map { apiObject ->
-                            // Находим соответствующий объект в БД
-                            val existing = currentObjects.find { it.id == apiObject.id }
-                            // Сохраняем статус избранного если объект уже есть в БД
-                            apiObject.copy(isFavorite = existing?.isFavorite ?: false)
-                        }
-
-                        // Сохраняем в БД
-                        dao.insertAll(objectsWithFavorites)
-                        Log.d("CosmicRepository", "Данные сохранены в БД: ${objectsWithFavorites.size} объектов")
-                    }
-                } else {
-                    Log.e("CosmicRepository", "Ошибка API: ${response.code()}")
-                    Log.e("CosmicRepository", "Сообщение ошибки: ${response.errorBody()?.string()}")
-                }
-            } catch (e: Exception) {
-                Log.e("CosmicRepository", "Сетевая ошибка: ${e.message}", e)
-            }
-        }
-    }
-
+    // Просто возвращаем LiveData — ViewModel будет наблюдать за ним
+    fun getAllObjects(): LiveData<List<CosmicObject>> = dao.getAllObjects()
 
     // Избранное
     fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
 
-    suspend fun toggleFavorite(id: String, currentStatus: Boolean) {
-        withContext(Dispatchers.IO) {
-            dao.updateFavorite(id, !currentStatus)
-        }
+    // Блокирующий запрос — нужен для сохранения isFavorite при обновлении
+    suspend fun getAllObjectsBlocking(): List<CosmicObject> = withContext(Dispatchers.IO) {
+        dao.getAllObjectsBlocking()
     }
 
-    suspend fun getObjectById(id: String): CosmicObject? {
-        return withContext(Dispatchers.IO) {
-            dao.getObjectById(id)
+    suspend fun refreshFromNetwork() = withContext(Dispatchers.IO) {
+        if (!isNetworkAvailable(appContext)) {
+            Log.d("Repository", "Нет интернета — пропускаем обновление")
+            return@withContext
+        }
+
+        try {
+            Log.d("Repository", "Загружаем данные из NASA APOD...")
+            val response = nasaApi.getAPOD(count = 20)
+
+            if (response.isSuccessful && response.body() != null) {
+                val apiObjects = response.body()!!
+
+                // Сохраняем статус избранного
+                val currentFavoritesMap = getAllObjectsBlocking()
+                    .associateBy { it.id }
+
+                val updatedObjects = apiObjects.map { apiObj ->
+                    val existing = currentFavoritesMap[apiObj.id]
+                    apiObj.copy(isFavorite = existing?.isFavorite ?: false)
+                }
+
+                dao.insertAll(updatedObjects)
+                Log.d("Repository", "Успешно сохранено ${updatedObjects.size} объектов")
+            } else {
+                Log.e("Repository", "Ошибка API: ${response.code()} ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.e("Repository", "Исключение при загрузке", e)
         }
     }
+    suspend fun setFavorite(id: String, isFavorite: Boolean) = withContext(Dispatchers.IO) {
+        dao.updateFavorite(id, isFavorite)
+    }
+
+
+
+    suspend fun getObjectById(id: String): CosmicObject? = withContext(Dispatchers.IO) {
+        dao.getObjectById(id)
+    }
+
 
     // Проверка сети
     fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
-                as ConnectivityManager
-
-        return try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                val network = connectivityManager.activeNetwork
-                val capabilities = connectivityManager.getNetworkCapabilities(network)
-                capabilities != null && (
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                        )
-            } else {
-                val networkInfo = connectivityManager.activeNetworkInfo
-                networkInfo != null && networkInfo.isConnected
-            }
-        } catch (e: Exception) {
-            Log.e("CosmicRepository", "Ошибка проверки сети", e)
-            false
-        }
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(activeNetwork) ?: return false
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
+
 }
+
