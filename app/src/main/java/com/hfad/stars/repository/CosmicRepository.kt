@@ -24,8 +24,6 @@ class CosmicRepository(context: Context) {
     private val dao = AppDatabase.getDatabase(context).cosmicObjectDao()
     private val appContext = context.applicationContext
 
-    private val _allObjects = MutableLiveData<List<CosmicObject>>()
-
     private val nasaApi: NASAApiService by lazy {
         Retrofit.Builder()
             .baseUrl("https://api.nasa.gov/")
@@ -34,13 +32,9 @@ class CosmicRepository(context: Context) {
             .create(NASAApiService::class.java)
     }
 
-    // Получить все объекты
+    // Получить все объекты - ПРОСТО возвращаем LiveData из DAO
     fun getAllObjects(): LiveData<List<CosmicObject>> {
-        // Сначала подписываемся на данные из БД
-        dao.getAllObjects().observeForever { objects ->
-            _allObjects.value = objects
-        }
-        return _allObjects
+        return dao.getAllObjects()
     }
 
     // Загрузить из сети и сохранить в БД
@@ -54,8 +48,14 @@ class CosmicRepository(context: Context) {
                     response.body()?.let { objects ->
                         Log.d("CosmicRepository", "Получено ${objects.size} объектов из API")
 
+                        // Логируем первые 3 объекта для отладки
+                        objects.take(3).forEachIndexed { index, obj ->
+                            Log.d("CosmicRepository", "Объект $index: id=${obj.id}, name=${obj.name}")
+                        }
+
                         // Получаем текущие объекты из БД для сохранения статуса избранного
                         val currentObjects = dao.getAllObjects().value ?: emptyList()
+                        Log.d("CosmicRepository", "Текущих объектов в БД: ${currentObjects.size}")
 
                         val objectsWithFavorites = objects.map { apiObject ->
                             // Находим соответствующий объект в БД
@@ -66,16 +66,18 @@ class CosmicRepository(context: Context) {
 
                         // Сохраняем в БД
                         dao.insertAll(objectsWithFavorites)
-                        Log.d("CosmicRepository", "Данные сохранены в БД")
+                        Log.d("CosmicRepository", "Данные сохранены в БД: ${objectsWithFavorites.size} объектов")
                     }
                 } else {
                     Log.e("CosmicRepository", "Ошибка API: ${response.code()}")
+                    Log.e("CosmicRepository", "Сообщение ошибки: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("CosmicRepository", "Сетевая ошибка: ${e.message}", e)
             }
         }
     }
+
 
     // Избранное
     fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
@@ -87,7 +89,9 @@ class CosmicRepository(context: Context) {
     }
 
     suspend fun getObjectById(id: String): CosmicObject? {
-        return dao.getObjectById(id)
+        return withContext(Dispatchers.IO) {
+            dao.getObjectById(id)
+        }
     }
 
     // Проверка сети
@@ -95,16 +99,21 @@ class CosmicRepository(context: Context) {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
                 as ConnectivityManager
 
-        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork
-            val capabilities = connectivityManager.getNetworkCapabilities(network)
-            capabilities != null && (
-                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-                    )
-        } else {
-            val networkInfo = connectivityManager.activeNetworkInfo
-            networkInfo != null && networkInfo.isConnected
+        return try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                val network = connectivityManager.activeNetwork
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                capabilities != null && (
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                        )
+            } else {
+                val networkInfo = connectivityManager.activeNetworkInfo
+                networkInfo != null && networkInfo.isConnected
+            }
+        } catch (e: Exception) {
+            Log.e("CosmicRepository", "Ошибка проверки сети", e)
+            false
         }
     }
 }

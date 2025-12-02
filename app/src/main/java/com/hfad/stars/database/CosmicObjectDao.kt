@@ -32,19 +32,3 @@ interface CosmicObjectDao {
     @Delete
     suspend fun delete(cosmicObject: CosmicObject)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

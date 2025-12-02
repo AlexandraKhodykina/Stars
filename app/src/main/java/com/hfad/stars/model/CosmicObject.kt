@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName
 @Entity(tableName = "cosmic_objects")
 data class CosmicObject(
     @PrimaryKey
-    @SerializedName("id")
+    @SerializedName("date")
     val id: String = "",
 
     @SerializedName("title")
@@ -23,14 +23,15 @@ data class CosmicObject(
     @SerializedName("media_type")
     val type: String? = null,
 
-    @SerializedName("date")
-    val date: String? = null,
-
     @SerializedName("thumbnail_url")
     val thumbnailUrl: String? = null,
 
+    // ИСПРАВЛЕНО: hdurl (маленькими буквами) как в JSON
     @SerializedName("hdurl")
     val hdUrl: String? = null,
+
+    @SerializedName("copyright")
+    val copyright: String? = null,
 
     val isFavorite: Boolean = false
 )

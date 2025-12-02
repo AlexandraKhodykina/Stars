@@ -11,8 +11,9 @@ interface NASAApiService {
     // Astronomy Picture of the Day
     @GET("planetary/apod")
     suspend fun getAPOD(
-        @Query("api_key") apiKey: String = "DEMO_KEY",
+        @Query("api_key") apiKey: String = "yZGDPznGxJMuDfAj2eUb7v0GocJcLfeZnljG8OFQ",
         @Query("count") count: Int = 10,
+        @Query("thumbs") thumbs: Boolean = true
     ): Response<List<CosmicObject>>
 
     // Near Earth Objects
