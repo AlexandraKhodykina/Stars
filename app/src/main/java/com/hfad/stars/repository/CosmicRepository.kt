@@ -35,6 +35,7 @@ class CosmicRepository(context: Context) {
     // Просто возвращаем LiveData — ViewModel будет наблюдать за ним
     fun getAllObjects(): LiveData<List<CosmicObject>> = dao.getAllObjects()
 
+
     // Избранное
     fun getFavorites(): LiveData<List<CosmicObject>> = dao.getFavorites()
 

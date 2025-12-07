@@ -26,7 +26,6 @@ data class CosmicObject(
     @SerializedName("thumbnail_url")
     val thumbnailUrl: String? = null,
 
-    // ИСПРАВЛЕНО: hdurl (маленькими буквами) как в JSON
     @SerializedName("hdurl")
     val hdUrl: String? = null,
 

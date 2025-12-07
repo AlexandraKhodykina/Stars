@@ -14,7 +14,6 @@ import com.hfad.stars.viewmodel.MainViewModel
 import android.view.View
 import android.widget.Toast
 
-
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -31,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         setupSearch()
         setupObservers()
 
-        viewModel.refresh() // первая загрузка
+        viewModel.refresh()
     }
 
     private fun setupHeader() {
@@ -39,16 +38,34 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, FavoritesActivity::class.java))
         }
     }
+
     private fun setupRecyclerView() {
         adapter = CosmicObjectAdapter(
             onItemClick = { cosmicObject ->
-                val intent = Intent(this, DetailsActivity::class.java).apply {
-                    putExtra("object_id", cosmicObject.id)
+                if (adapter.isSelectionMode) {
+                    // В режиме выбора — просто переключаем галочку (адаптер сам всё делает)
+                    adapter.notifyDataSetChanged()
+                } else {
+                    // Обычный клик — открываем детали
+                    val intent = Intent(this, DetailsActivity::class.java).apply {
+                        putExtra("object_id", cosmicObject.id)
+                    }
+                    startActivity(intent)
                 }
-                startActivity(intent)
             },
             onItemLongClick = { cosmicObject ->
-                viewModel.toggleFavorite(cosmicObject)
+                if (!adapter.isSelectionMode) {
+                    adapter.setSelectionMode(true)
+                    Toast.makeText(this, "Режим выбора включён. Выберите объекты и долго нажмите снова", Toast.LENGTH_LONG).show()
+                } else {
+                    // ВТОРОЕ ДОЛГОЕ НАЖАТИЕ — ДОБАВЛЯЕМ ВСЕ ВЫБРАННЫЕ В ИЗБРАННОЕ
+                    val selected = adapter.getSelectedItems()
+                    if (selected.isNotEmpty()) {
+                        selected.forEach { viewModel.toggleFavorite(it) }
+                        adapter.setSelectionMode(false)
+                        Toast.makeText(this, "Добавлено ${selected.size} в избранное", Toast.LENGTH_SHORT).show()
+                    }
+                }
                 true
             }
         )
@@ -61,13 +78,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupSearch() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
-
+            override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
-                val query = newText?.trim() ?: ""
-                viewModel.search(query)  // ← Вот он — поиск!
+                viewModel.search(newText?.trim() ?: "")
                 return true
             }
         })
@@ -76,9 +89,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupObservers() {
         viewModel.cosmicObjects.observe(this) { list ->
             adapter.submitList(list)
-            val isEmpty = list.isEmpty()
-            binding.emptyTextView.visibility = if (isEmpty) View.VISIBLE else View.GONE
-            binding.recyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+            binding.emptyTextView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+            binding.recyclerView.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
         }
 
         viewModel.isLoading.observe(this) { loading ->

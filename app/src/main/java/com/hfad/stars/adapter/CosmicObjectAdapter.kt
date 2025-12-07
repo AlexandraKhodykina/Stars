@@ -25,7 +25,7 @@ class CosmicObjectAdapter(
     fun setSelectionMode(enabled: Boolean) {
         isSelectionMode = enabled
         if (!enabled) selectedItems.clear()
-        notifyDataSetChanged()
+        notifyDataSetChanged() // Обновляем весь список
     }
 
     fun getSelectedItems(): Set<CosmicObject> = selectedItems.toSet()
@@ -69,16 +69,17 @@ class CosmicObjectAdapter(
             // Чекбокс
             checkBox.visibility = if (selectionMode) View.VISIBLE else View.GONE
             checkBox.isChecked = isSelected
+            checkBox.isClickable = false  // МИНИМАЛЬНОЕ ИЗМЕНЕНИЕ 1: чекбокс только визуальный, клик ловит itemView
 
             // Клик по элементу
             itemView.setOnClickListener {
                 if (selectionMode) {
-                    if (isSelected) {
+                    if (selectedItems.contains(cosmicObject)) {
                         selectedItems.remove(cosmicObject)
                     } else {
                         selectedItems.add(cosmicObject)
                     }
-                    notifyItemChanged(adapterPosition)
+                    notifyItemChanged(this.adapterPosition)  // МИНИМАЛЬНОЕ ИЗМЕНЕНИЕ 2: this.adapterPosition (исправляет Unresolved)
                 } else {
                     onItemClick(cosmicObject)
                 }
